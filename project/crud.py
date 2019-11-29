@@ -4,6 +4,8 @@ from sqlalchemy.orm import sessionmaker
 from datetime import datetime
 import connexion
 import yaml
+from sqlalchemy import and_, or_
+
 engine = create_engine(config.DATABASE_URI)
 
 # Global
@@ -43,4 +45,23 @@ for data in yaml.load_all(open(file)):
 
 s.commit()
 
-print(s.query(model.Book).all())
+r = s.query(model.Book)
+
+# Using ilike
+# print(r.filter(model.Book.title.ilike('deep learning')).first())
+
+# using between()
+# start_date = datetime(2012, 1, 25)
+# end_date = datetime(2015, 12, 30)
+
+# Using AND() OR()
+# and_operator = r.filter(
+#     and_(
+#         model.Book.pages > 500,
+#         model.Book.published > datetime(2015, 5, 1)
+#     )
+# ).all()
+# print(and_operator)
+
+# Order By
+# print(r.order_by(model.Book.pages.desc()).all())

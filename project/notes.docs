@@ -1,0 +1,33 @@
+https://www.learndatasci.com/tutorials/using-databases-python-postgres-sqlalchemy-and-alembic/
+
+QUERYING
+To fetch all queries
+    s.query(Book).all()
+
+To fetch the first element
+    s.query(Book).first()
+
+Using WHERE
+Always use 'filter' or 'filter_by'
+"Filter By"
+    r = s.query(Book).filter_by(title='Deep Learning').first()
+    print("filter_by:", r)
+
+"Filter"
+    r = s.query(Book).filter(Book.title=='Deep Learning').first()
+    print("filter:", r)
+
+NB: filter_by is used to make simpler queries while filter can be used to make verbose queries.
+filter has more powers like:
+    1. s.query(Book).filter(Book.title.ilike('deep Learning').first()
+    ilile() ignores case only
+    2. s.query(Book).filter(Book.published.between(start_date, end_date)).all()
+    between() finds all books in the range
+    3. To use and() / or() import them first
+        s.query(Book).filter(
+            .and_(
+                Book.pages > 500,
+                Books.published > datetime(2017, 01, 01)
+            )).all()
+    4. Using ORDER_BY - either desc() or asc()
+        s.query(Book).order_by(Book.pages.desc()).all()
