@@ -31,3 +31,6 @@ filter has more powers like:
             )).all()
     4. Using ORDER_BY - either desc() or asc()
         s.query(Book).order_by(Book.pages.desc()).all()
+
+
+ALEMBIC MIGRATIONS
