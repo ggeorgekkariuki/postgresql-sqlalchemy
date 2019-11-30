@@ -4,6 +4,9 @@ QUERYING
 To fetch all queries
     s.query(Book).all()
 
+To fetch an aspect of the table eg price
+    s.query(Book.title, Book.price).all()
+
 To fetch the first element
     s.query(Book).first()
 
@@ -34,3 +37,70 @@ filter has more powers like:
 
 
 ALEMBIC MIGRATIONS
+This is used when we want to update the table but it already consists of user generated data that we can not afford to lose.
+In this effect, the alembic library can auto-generate SQA code to transform the database from the old version to a new version. Each time a migration is performed, a script is created with details on how to convert the database to the new version aka upgrade and how to reverse migrations aka downgrade.
+
+The version of the models is tracked by a new table, alembic_version, which is automatically created by Alembic in your database.
+
+The basic steps
+    1. You change the model in models.py
+    2. You ask Alembic what's different about the models
+    3. Alembic creates a .py script to convert the models to the current definition
+    4. You tell Alembic to proceed to the upgrade
+    5. Tables are changed and the current version is stored in the alembic_version table in postgres
+
+Alembic steps.
+    1. Initialise alembic in the root project folder
+        alembic init alembic
+    2. Set up Alembic - edit the 'env.py' file to:
+        Tell alembic where our database server is (line 12)
+            fileConfig(config.config_file_name)
+
+            import sys, os
+            sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+
+            import config as my_config
+            config.set_main_option('sqlalchemy.url', my_config.DATABASE_URI)
+
+        Tell Alembic how our model is defined (line 21)
+            from models import Base
+            target_metadata = Base.metadata
+    
+    3. Once these values are added, we can run a command to tell alembic our database exists and to start checking for migrations from this point forward: *(in CMD)
+        alembic stamp head
+
+    A new alembic_version has been created in the db to track the current version of our model.
+
+*Making the first change*
+    - Make a change to the model.py eg create a price column
+    - Ask Alembic to auto-generate a migration script for us via:
+        alembic revision --autogenerate -m "Added price column"
+
+    NB: Ensure all sessions are closed
+
+    - Run the command on the migration script that will follow the upgrade() of the model (see intro paragraph)
+        alembic upgrade head
+
+INTRODUCING THE 'CONTEXT MANAGER'
+This will reduce the load of creating, adding to, committing and closing sessions everytime.
+
+Steps:
+    1. First we import the contextmanager decorator from contextlib and define a session_scope function.
+        from contextlib import contextmanager
+        @contextmanager
+        def session_scope():
+    2. We open the session normally and 'yield' it to the program
+        session = Session()
+        try:
+            yield session
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
+        else:
+            session.close()
+
+with session_scope() as s:
+    book = s.query(Book).filter(Book.title.ilike('%introduction to statistical%')).first()
+    book.price = '67.98'
+    s.add(book)
