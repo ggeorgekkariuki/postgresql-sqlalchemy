@@ -37,7 +37,9 @@ recreate_database()
 
 # Create a new session
 s = Session()
-file = 'project/books.yaml'
+
+file = 'books.yaml'
+# file = 'project/books.yaml'
 
 for data in yaml.load_all(open(file)):
     book = model.Book(**data)
@@ -45,7 +47,9 @@ for data in yaml.load_all(open(file)):
 
 s.commit()
 
-r = s.query(model.Book)
+s.close_all()
+
+# r = s.query(model.Book)
 
 # Using ilike
 # print(r.filter(model.Book.title.ilike('deep learning')).first())
@@ -65,3 +69,42 @@ r = s.query(model.Book)
 
 # Order By
 # print(r.order_by(model.Book.pages.desc()).all())
+
+
+# This small script will ask the user in the command line to add prices for each book
+# s = Session()
+
+# books = s.query(model.Book).all()
+
+# for book in books:
+#     price = input(f"Price for '{book.title}': $")
+#     book.price = price
+#     s.add(book)
+
+# s.commit()
+# s.close()
+
+# The CONTEXT MANAGER
+from contextlib import contextmanager
+@contextmanager
+def session_scope():
+    session = Session()
+    try:
+        yield session
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    else:
+        session.close()
+
+with session_scope() as s:
+    books = s.query(model.Book).all()
+
+    for book in books:
+        price = input(f"Price for '{book.title}': $")
+        book.price = price
+        s.add(book)
+
+    titles = s.query(model.Book.title, model.Book.price).all()
+    print(titles)
